@@ -14,6 +14,8 @@ import matplotlib.colors as mcolors
 from matplotlib_scalebar.scalebar import ScaleBar
 from rasterio.plot import show
 from matplotlib.patches import Patch, FancyArrow
+from geo_northarrow import add_north_arrow
+from pyproj import Transformer
 
 # Data preparation
 ## We prepare the data for the analysis using TIF files for Ecuador's land use coverage from 1985 to 2022.
@@ -100,6 +102,47 @@ for year in ["1985", "1987", "1992", "1997", "2002", "1997", "2002", "2007", "20
         # We plot the continental borders on top of the raster
         borders.boundary.plot(ax=ax, linewidth=0.8, edgecolor='black')
 
+        # We repeat for the borders for the delimiting countries.
+        ecuador_borders = gpd.read_file('ecuador_borders.shp')
+
+        if ecuador_borders.crs is None:
+            ecuador_borders = ecuador_borders.set_crs(current_crs)
+
+        ecuador_borders = ecuador_borders.to_crs(raster_crs)
+
+        ecuador_borders.boundary.plot(ax=ax, linewidth=1, edgecolor='black')
+        ecuador_borders.plot(ax=ax, color='#f2f2f2', edgecolor='black', linewidth=1)
+
+        # We add text for "Peru" and "Colombia"
+        ax.text(-76, -3.15, 'PERU', fontsize=15, color='black', ha='center', va='center')
+
+        ax.text(-76, 1.5, 'COLOMBIA', fontsize=15, color='black', ha='center', va='center')
+
+        # We repeat for the sea borders.
+        ocean_borders = gpd.read_file('ne_10m_ocean.shp')
+
+        ocean_borders_crs = "EPSG:4326" 
+
+        if ocean_borders.crs is None:
+            ocean_borders = ocean_borders.set_crs(ocean_borders_crs)
+
+        ocean_borders = ocean_borders.to_crs(raster_crs)
+
+        ocean_borders.plot(ax=ax, color='#b2e8e8', alpha=0.5)
+
+        # We add text for "Pacific Ocean"
+        ax.text(-81, 0, 'PACIFIC \n OCEAN', fontsize=15, color='#519ad0', ha='center', va='center')
+
+        # We set the axis limits to focus on Ecuador
+        # Approximate lat/lon bounding box for Ecuador: [-82, -74.5, -5.5, 3] (lon_min, lon_max, lat_min, lat_max)
+        transformer = Transformer.from_crs("EPSG:4326", raster_crs)
+
+        xmin, ymin = transformer.transform(-82, -5.5)  # Lower-left corner (lon_min, lat_min)
+        xmax, ymax = transformer.transform(-74.5, 3)   # Upper-right corner (lon_max, lat_max)
+
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(ymin, ymax)
+
         # We add a scalebar
         scalebar = ScaleBar(120, units='km', location='lower left', scale_loc='top', length_fraction=6667 / sliced_data.shape[1])
         ax.add_artist(scalebar)
@@ -117,14 +160,14 @@ for year in ["1985", "1987", "1992", "1997", "2002", "1997", "2002", "2007", "20
         ax.legend(handles=legend_elements, loc='lower right', title='Legend')
 
         # and a north arrow
-        ax.annotate('N', xy=(0.1, 0.865), xytext=(0.1, 0.8),
-                    arrowprops=dict(facecolor='black', width=5, headwidth=10),
-                    fontsize=15, ha='center', va='center', xycoords='axes fraction', backgroundcolor='white')
+        add_north_arrow(ax, scale=.75, xlim_pos=.15, ylim_pos=.865, color='#000', text_scaler=4, text_yT=-1.25)
 
-        ax.set_title('Ecuador land use: Natural vs Anthropic', color='black', size=17)
-        ax.text(0.95, 0.95, f'${year}$', transform=ax.transAxes, fontsize=17, color='black', ha='right', va='top')
+        ax.set_title('Ecuador land use: Natural vs Anthropic', color='black', size=20, pad=20.0)
+        ax.text(0.95, 0.95, f'${year}$', transform=ax.transAxes, fontsize=20, color='black', ha='right', va='top')
 
         # Finally we save the plot as an jpg image in the figures folder
         plt.savefig(f'figures/ecuador_land_use_{year}.jpg', dpi=300)
 
         print(f"Plot saved for year {year}.")
+        
+    print("All plots have been saved.")
