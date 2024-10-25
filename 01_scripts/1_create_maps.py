@@ -17,57 +17,15 @@ from matplotlib.patches import Patch, FancyArrow
 from geo_northarrow import add_north_arrow
 from pyproj import Transformer
 
-# Data preparation
-### Commented because the modification is being implemented in the second code
-## We prepare the data for the analysis using TIF files for Ecuador's land use coverage from 1985 to 2022.
-## The data is available in the data_original folder. We will modify the data to create only two classes: natural and anthropic land use.
-# for year in ["1985", "1987", "1992", "1997", "2002", "1997", "2002", "2007", "2012", "2017", "2022"]:
-
-#     # We open the raster file
-#     with rasterio.open(f'data_original/ecuador_coverage_{year}.tif') as src:
-        
-#         block_size = 1024  
-        
-#         # We prepare the destination raster
-#         with rasterio.open(
-#             f'data_modified/ecuador_coverage_{year}_modified.tif',
-#             'w',
-#             driver='GTiff',
-#             height=src.height,
-#             width=src.width,
-#             count=1,
-#             dtype=src.dtypes[0],
-#             crs=src.crs,
-#             transform=src.transform
-#         ) as dst:
-
-#         # Since modifying the raster makes the process memory-intensive, we will read and write the raster in chunks
-            
-#             # We iterate over the raster in windows (chunks)
-#             for i in range(0, src.height, block_size):
-#                 for j in range(0, src.width, block_size):
-#                     # We define a chunk to read and process
-#                     window = rasterio.windows.Window(j, i, min(block_size, src.width - j), min(block_size, src.height - i))
-                    
-#                     # We read the data for this window
-#                     data = src.read(1, window=window)
-                    
-#                     # We replace values for natural and anthropic land use
-#                     data = np.where(np.isin(data, [3.0, 4.0, 5.0, 6.0, 11.0, 12.0, 29.0, 13.0, 33.0, 34.0, 31.0]), 1.0, data)
-#                     data = np.where(np.isin(data, [9.0, 21.0, 30.0, 25.0]), 2.0, data)
-#                     data = np.where(~np.isin(data, [0.0, 1.0, 2.0]), 0.0, data)  # Keep only 0.0, 1.0, 2.0
-                    
-#                     # We write the modified data back to the new raster file
-#                     dst.write(data, window=window, indexes=1)
-
-#     print(f"Raster modification complete for year {year}.")
-
-# print("All rasters have been modified.")
-
 # Plotting
 ## We will plot the modified rasters for each year and save the plots as images in the figures folder.
-## We are slicing the data to exclude the Galapagos Islands and plotting the continental provinces' borders on top of the raster.
+## We are slicing the data to exclude the Galapagos Islands and plotting the continental provinces'
+#  borders on top of the raster.
+## We are also plotting the borders of the delimiting countries and the ocean borders.
+
 for year in ["1985", "1987", "1992", "1997", "2002", "1997", "2002", "2007", "2012", "2017", "2022"]:
+
+    print(f"Plotting for year {year}...")
     # We open the raster file
     with rasterio.open(f'../02_data/MB-Ecuador-{year}.tif') as src:
         # We read the raster data
@@ -135,7 +93,7 @@ for year in ["1985", "1987", "1992", "1997", "2002", "1997", "2002", "2007", "20
         ax.text(-81, 0, 'PACIFIC \n OCEAN', fontsize=15, color='#519ad0', ha='center', va='center')
 
         # We set the axis limits to focus on Ecuador
-        # Approximate lat/lon bounding box for Ecuador: [-82, -74.5, -5.5, 3] (lon_min, lon_max, lat_min, lat_max)
+        ## Approximate lat/lon bounding box for Ecuador: [-82, -74.5, -5.5, 3] (lon_min, lon_max, lat_min, lat_max)
         transformer = Transformer.from_crs("EPSG:4326", raster_crs)
 
         xmin, ymin = transformer.transform(-82, -5.5)  # Lower-left corner (lon_min, lat_min)
@@ -171,4 +129,4 @@ for year in ["1985", "1987", "1992", "1997", "2002", "1997", "2002", "2007", "20
 
         print(f"Plotting complete for year {year} and saved at '../04_output/ecuador_land_use_{year}.jpg'.")
         
-    print("All plots have been saved.")
+print("All plots have been saved.")
