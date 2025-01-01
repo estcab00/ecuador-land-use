@@ -1,5 +1,5 @@
 # Ecuador Land Use
-This repository creates a GIF image that shows the evolution of land use in Ecuador, between natural and antrophic usage. 
+This repository creates a GIF image that shows the evolution of land use in Ecuador, between natural and anthropic usage. It was created as a part of a project led by Ph.D. student Angelo Cozzubo. 
 
 ## 📚 Structure
 The repository is organized as follows:
